@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "LhcVaspTools"
+version = "1.0"
+dependencies = [
+  "numpy",
+  "matplotlib",
+  "h5py",
+]
+requires-python = ">=3.9"
+authors = [
+  {name = "Houchen Li", email = "houchen_li@hotmail.com"},
+]
+maintainers = [
+  {name = "Houchen Li", email = "houchen_li@hotmail.com"}
+]
+description = "The VASP Tools to Handle \"vaspout.h5\""
+readme = "README.md"
+license = {file = "LICENSE"}
+keywords = ["vasp", "hdf5"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python"
+]
+
+[project.scripts]
+extractEFermi = "LhcVaspTools.scripts.extractEFermi:main"
+deterCrossBands = "LhcVaspTools.scripts.deterCrossBands:main"
+genWeightsOnEachBand = "LhcVaspTools.scripts.genWeightsOnEachBand:main"
+genKpointsPlane = "LhcVaspTools.scripts.genKpointsPlane:main"
+genBands = "LhcVaspTools.scripts.genBands:main"
+plotBands = "LhcVaspTools.scripts.plotBands:main"
+genEnergyCutCrsSec = "LhcVaspTools.scripts.genEnergyCutCrsSec:main"
+plotEnergyCutCrsSec = "LhcVaspTools.scripts.plotEnergyCutCrsSec:main"
+genElecDnstyCrsSec = "LhcVaspTools.scripts.genElecDnstyCrsSec:main"
+plotElecDnstyCrsSec = "LhcVaspTools.scripts.plotElecDnstyCrsSec:main"
+genBandsWithOam = "LhcVaspTools.scripts.genBandsWithOam:main"
+plotBandsWithOam = "LhcVaspTools.scripts.plotBandsWithOam:main"
+genElecDnstyCrsSecWithOam = "LhcVaspTools.scripts.genElecDnstyCrsSecWithOam:main"
+plotElecDnstyCrsSecWithOam = "LhcVaspTools.scripts.plotElecDnstyCrsSecWithOam:main"
+genBandsWithWeights = "LhcVaspTools.scripts.genBandsWithWeights:main"
+plotBandsWithWeights = "LhcVaspTools.scripts.plotBandsWithWeights:main"
