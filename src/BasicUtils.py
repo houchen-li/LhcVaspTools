@@ -101,8 +101,9 @@ class Vaspdata(object):
 
 class EnergyBands(object):
 
-    def __init__(self, kpath: Array = None, eigenvalues: Array = None, efermi: Real = 0., xticklabels: List = None,
-                 xticks: Array = None, xlim: Array = None, ylim: Array = np.asarray([-5., 5.], dtype=Real),
+    def __init__(self, kpath: Array = None, eigenvalues: Array = None, efermi: Real = 0.,
+                 xticklabels: List = None, xticks: Array = None,
+                 xlim: Array = None, ylim: Array = None,
                  discontinued_indices: Array = None) -> None:
         self._kpath: Array = kpath
         self._eigenvalues: Array = eigenvalues
@@ -462,7 +463,8 @@ class EnergyCutCrsSec(CrsSec):
 
 class ElecDnstyCrsSec(CrsSec):
 
-    def __init__(self, KX: Array = None, KY: Array = None, eigenvalues: Array = None, energy_level: Real = None,
+    def __init__(self, KX: Array = None, KY: Array = None,
+                 eigenvalues: Array = None, energy_level: Real = None,
                  sigma: Array = None) -> None:
         super(ElecDnstyCrsSec, self).__init__(KX, KY)
         self._eigenvalues: Array = eigenvalues
