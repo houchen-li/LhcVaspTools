@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+from LhcVaspTools.BasicUtils import readDataFromJson
 from LhcVaspTools.OamExts import EnergyBandsWithOam
 
 
@@ -14,6 +15,8 @@ def parseArgv() -> argparse.Namespace:
     parser.add_argument('-c', '--component', nargs="?", type=str,
                         choices=['Lx', 'Ly', 'Lz'], dest='component', required=True,
                         help='the OAM component to plot.')
+    parser.add_argument('-bf', '--band-indices-file', nargs='?', type=str,
+                        dest='band_indices_file', help='band_indices_file_name')
     options: argparse.Namespace = parser.parse_args()
     return options
 
@@ -23,10 +26,15 @@ def main() -> int:
     input_file_name: str = options.input_file_name
     output_file_name: str = options.output_file_name
     component: str = options.component
+    band_indices_file_name: str = options.band_indices_file_name
+    if band_indices_file_name is None:
+        band_indices: list = None
+    else:
+        band_indices: list = readDataFromJson(band_indices_file_name)
     energy_bands_with_oam: EnergyBandsWithOam = EnergyBandsWithOam()
     energy_bands_with_oam.readFile(input_file_name)
     energy_bands_with_oam.ylim = (-3., 3.)
-    energy_bands_with_oam.plotFigure(output_file_name, component)
+    energy_bands_with_oam.plotFigure(output_file_name, component, band_indices=band_indices)
     return 0
 
 

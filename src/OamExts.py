@@ -6,8 +6,8 @@ import numpy as np
 from matplotlib import colors as mcolors
 from matplotlib.collections import LineCollection
 
-from LhcVaspTools.BasicUtils import Int, Real, String, \
-    Array, List, Vaspdata, EnergyBands, GaussFilter, ElecDnstyCrsSec
+from LhcVaspTools.BasicUtils import Int, Real, String, Array, List,\
+    Vaspdata, EnergyBands, GaussFilter, ElecDnstyCrsSec
 
 
 class OamCalc(object):
@@ -49,7 +49,7 @@ class OamCalc(object):
 
     @staticmethod
     def genLzAtPhase(x: Array) -> Real:
-        temp: np.ndarray = np.asarray([0, -x[3] * 1J, 0, x[1] * 1J,
+        temp: Array = np.asarray([0, -x[3] * 1J, 0, x[1] * 1J,
                                        -x[8] * 2J, -x[7] * 1J, 0, x[5] * 1J, x[4] * 2J])
         lz: Real = np.real(np.dot(np.conjugate(x), temp))
         return lz
@@ -57,10 +57,12 @@ class OamCalc(object):
 
 class EnergyBandsWithOam(EnergyBands):
 
-    def __init__(self, kpath: Array = None, eigenvalues: Array = None, Lx: Array = None, Ly: Array = None,
-                 Lz: Array = None, efermi: Real = 0., xticklabels: List = None, xticks: Array = None,
-                 xlim: Array = None, ylim: Array = [-5., 5.], discontinued_indices: Array = None) -> None:
-        super(EnergyBandsWithOam, self).__init__(kpath, eigenvalues, efermi, xticklabels, xticks, xlim, ylim,
+    def __init__(self, kpath: Array = None, eigenvalues: Array = None,
+                 Lx: Array = None, Ly: Array = None, Lz: Array = None, efermi: Real = 0.,
+                 xticklabels: List = None, xticks: Array = None,
+                 discontinued_indices: Array = None) -> None:
+        super(EnergyBandsWithOam, self).__init__(kpath, eigenvalues, efermi,
+                                                 xticklabels, xticks,
                                                  discontinued_indices)
         self._Lx: Array = Lx
         self._Ly: Array = Ly
@@ -81,9 +83,9 @@ class EnergyBandsWithOam(EnergyBands):
     @staticmethod
     def readDataFromH5grp(energy_bands_with_oam: EnergyBands, h5grp: h5.Group) -> None:
         super(EnergyBandsWithOam, EnergyBandsWithOam).readDataFromH5grp(energy_bands_with_oam, h5grp)
-        energy_bands_with_oam.Lx = np.asarray(h5grp['Lx'], dtype=Real)
-        energy_bands_with_oam.Ly = np.asarray(h5grp['Ly'], dtype=Real)
-        energy_bands_with_oam.Lz = np.asarray(h5grp['Lz'], dtype=Real)
+        energy_bands_with_oam._Lx = np.asarray(h5grp['Lx'], dtype=Real)
+        energy_bands_with_oam._Ly = np.asarray(h5grp['Ly'], dtype=Real)
+        energy_bands_with_oam._Lz = np.asarray(h5grp['Lz'], dtype=Real)
         return
 
     def saveFile(self, file_name: String) -> None:
@@ -103,12 +105,12 @@ class EnergyBandsWithOam(EnergyBands):
     @staticmethod
     def saveData2H5grp(energy_bands_with_oam: EnergyBandsWithOam, h5grp: h5.Group) -> None:
         super(EnergyBandsWithOam, EnergyBandsWithOam).saveData2H5grp(energy_bands_with_oam, h5grp)
-        h5grp.create_dataset('Lx', shape=np.shape(energy_bands_with_oam.Lx), dtype=Real,
-                             data=energy_bands_with_oam.Lx, chunks=True, compression='gzip', compression_opts=9)
-        h5grp.create_dataset('Ly', shape=np.shape(energy_bands_with_oam.Ly), dtype=Real,
-                             data=energy_bands_with_oam.Ly, chunks=True, compression='gzip', compression_opts=9)
-        h5grp.create_dataset('Lz', shape=np.shape(energy_bands_with_oam.Lz), dtype=Real,
-                             data=energy_bands_with_oam.Lz, chunks=True, compression='gzip', compression_opts=9)
+        h5grp.create_dataset('Lx', shape=np.shape(energy_bands_with_oam._Lx), dtype=Real,
+                             data=energy_bands_with_oam._Lx, chunks=True, compression='gzip', compression_opts=9)
+        h5grp.create_dataset('Ly', shape=np.shape(energy_bands_with_oam._Ly), dtype=Real,
+                             data=energy_bands_with_oam._Ly, chunks=True, compression='gzip', compression_opts=9)
+        h5grp.create_dataset('Lz', shape=np.shape(energy_bands_with_oam._Lz), dtype=Real,
+                             data=energy_bands_with_oam._Lz, chunks=True, compression='gzip', compression_opts=9)
         return
 
     def loadVaspdata(self, vasp_data: Vaspdata) -> None:
@@ -121,18 +123,21 @@ class EnergyBandsWithOam(EnergyBands):
         oam_calc: OamCalc = OamCalc()
         oam_calc.phase = vasp_data.phase
         oam_calc.do_calculation()
-        energy_bands_with_oam.Lx = oam_calc.Lx
-        energy_bands_with_oam.Ly = oam_calc.Ly
-        energy_bands_with_oam.Lz = oam_calc.Lz
+        energy_bands_with_oam._Lx = oam_calc.Lx
+        energy_bands_with_oam._Ly = oam_calc.Ly
+        energy_bands_with_oam._Lz = oam_calc.Lz
         return
 
-    def plotFigure(self, file_name: String, component: String) -> None:
-        EnergyBandsWithOam.plotFigureOfEnergyBands(self, file_name, component)
+    def plotFigure(self, file_name: String, component: String, *,
+                   xlim: List = None, ylim: List = None,
+                   band_indices: List = None) -> None:
+        EnergyBandsWithOam.plotFigureOfEnergyBands(self, file_name, component, xlim, ylim, band_indices)
         return
 
     @staticmethod
-    def plotFigureOfEnergyBands(energy_bands_with_oam: EnergyBandsWithOam, file_name: String,
-                                component: String) -> None:
+    def plotFigureOfEnergyBands(energy_bands_with_oam: EnergyBandsWithOam, file_name: String, component: String, *,
+                                xlim: List = None, ylim: List = None,
+                                band_indices: List = None) -> None:
         plt.rcParams.update({
             "text.usetex": True,
             "font.family": "sans-serif",
@@ -146,7 +151,7 @@ class EnergyBandsWithOam(EnergyBands):
         fig: plt.Figure = plt.figure()
         ax: plt.Axes = fig.add_subplot()
         divnorm = mcolors.TwoSlopeNorm(vmin=-0.15, vcenter=0, vmax=0.15)
-        line_segments, L_segments = EnergyBandsWithOam.genSegments(energy_bands_with_oam, component)
+        line_segments, L_segments = EnergyBandsWithOam.genSegments(energy_bands_with_oam, component, band_indices)
         line_collection: LineCollection = LineCollection(
             line_segments, array=L_segments, cmap='coolwarm', norm=divnorm)
         ax.add_collection(line_collection)
@@ -156,8 +161,14 @@ class EnergyBandsWithOam(EnergyBands):
         ax.set_xticks(energy_bands_with_oam._xticks)
         if energy_bands_with_oam.xticklabels is not None:
             ax.set_xticklabels(energy_bands_with_oam.xticklabels)
-        ax.set_xlim(energy_bands_with_oam.xlim)
-        ax.set_ylim(energy_bands_with_oam.ylim)
+        if energy_bands_with_oam.xticklabels is not None:
+            ax.set_xticklabels(energy_bands_with_oam.xticklabels)
+        if xlim is None:
+            xlim = [energy_bands_with_oam._kpath[0], energy_bands_with_oam._kpath[-1]]
+        ax.set_xlim(xlim)
+        if ylim is None:
+            ylim = [-2., 1.]
+        ax.set_ylim(ylim)
         ax.grid()
         plt.show()
         fig.savefig(file_name)
@@ -165,22 +176,25 @@ class EnergyBandsWithOam(EnergyBands):
         return
 
     @staticmethod
-    def genSegments(energy_bands_with_oam: EnergyBandsWithOam, component: String) -> (Array, Array):
+    def genSegments(energy_bands_with_oam: EnergyBandsWithOam, component: String,
+                    band_indices: List) -> (Array, Array):
         x: Array = np.column_stack([energy_bands_with_oam._kpath[:-1], energy_bands_with_oam._kpath[1:]])
         x = np.delete(x, energy_bands_with_oam._discontinued_indices - 1, axis=0)
-        ys = np.stack([np.expand_dims(energy_bands_with_oam._eigenvalues[:, :-1] -
-                                      energy_bands_with_oam.efermi, axis=2), np.expand_dims(
-            energy_bands_with_oam._eigenvalues[:, 1:] -
-            energy_bands_with_oam.efermi, axis=2)], axis=2)
+        if band_indices is None:
+            data: Array = energy_bands_with_oam._eigenvalues
+        else:
+            data: Array = energy_bands_with_oam._eigenvalues[band_indices]
+        ys = np.stack([np.expand_dims(data[:, :-1] - energy_bands_with_oam.efermi, axis=2),
+                       np.expand_dims(data[:, 1:] - energy_bands_with_oam.efermi, axis=2)], axis=2)
         ys = np.delete(ys, energy_bands_with_oam._discontinued_indices - 1, axis=1)
         line_segments: Array = np.insert(ys, 0, x, axis=3)
         line_segments = line_segments.reshape(-1, 2, 2)
         if component == 'Lx':
-            L: Array = np.sum(energy_bands_with_oam.Lx, axis=2)
+            L: Array = np.sum(energy_bands_with_oam._Lx, axis=2)
         elif component == 'Ly':
-            L: Array = np.sum(energy_bands_with_oam.Ly, axis=2)
+            L: Array = np.sum(energy_bands_with_oam._Ly, axis=2)
         elif component == 'Lz':
-            L: Array = np.sum(energy_bands_with_oam.Lz, axis=2)
+            L: Array = np.sum(energy_bands_with_oam._Lz, axis=2)
         L_segments: Array = (L[:, :-1] + L[:, 1:]) / 2.
         L_segments = np.delete(L_segments, energy_bands_with_oam._discontinued_indices - 1, axis=1)
         L_segments = np.ravel(L_segments)
@@ -189,8 +203,9 @@ class EnergyBandsWithOam(EnergyBands):
 
 class ElecDnstyCrsSecWithOam(ElecDnstyCrsSec):
 
-    def __init__(self, kx: Array = None, ky: Array = None, eigenvalues: Array = None, LX: Array = None,
-                 LY: Array = None, LZ: Array = None, energy_level: Real = None, sigma: Real = None) -> None:
+    def __init__(self, kx: Array = None, ky: Array = None, eigenvalues: Array = None,
+                 LX: Array = None, LY: Array = None, LZ: Array = None,
+                 energy_level: Real = None, sigma: Real = None) -> None:
         super(ElecDnstyCrsSecWithOam, self).__init__(kx, ky, eigenvalues, energy_level, sigma)
         self._LX: Array = LX
         self._LY: Array = LY

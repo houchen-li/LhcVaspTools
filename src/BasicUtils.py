@@ -31,11 +31,13 @@ def saveData2Json(data: object, file_name: String) -> None:
 
 class Vaspdata(object):
 
-    def __init__(self, num_of_bands: Int = None, num_of_kpoints: Int = None, num_of_ions: Int = None,
-                 num_of_orbits: Int = None, scale: Real = None, lattice_vectors: Array = None,
+    def __init__(self, num_of_bands: Int = None, num_of_kpoints: Int = None,
+                 num_of_ions: Int = None, num_of_orbits: Int = None,
+                 scale: Real = None, lattice_vectors: Array = None,
                  types_of_ions: Array = None, nums_of_each_type: Array = None, positions_of_ions: Array = None,
-                 kpoints: Array = None, eigenvalues: Array = None, energies: Array = None, dos: Array = None,
-                 dos_integral: Array = None, efermi: Real = None, phase: Array = None) -> None:
+                 kpoints: Array = None, eigenvalues: Array = None,
+                 energies: Array = None, dos: Array = None, dos_integral: Array = None,
+                 efermi: Real = None, phase: Array = None) -> None:
         self.num_of_bands: Int = num_of_bands
         self.num_of_kpoints: Int = num_of_kpoints
         self.num_of_ions: Int = num_of_ions
@@ -103,15 +105,12 @@ class EnergyBands(object):
 
     def __init__(self, kpath: Array = None, eigenvalues: Array = None, efermi: Real = 0.,
                  xticklabels: List = None, xticks: Array = None,
-                 xlim: Array = None, ylim: Array = None,
                  discontinued_indices: Array = None) -> None:
         self._kpath: Array = kpath
         self._eigenvalues: Array = eigenvalues
         self.efermi: Real = efermi
         self.xticklabels: List = xticklabels
         self._xticks: Array = xticks
-        self.xlim: Array = xlim
-        self.ylim: Array = ylim
         self._discontinued_indices: Array = discontinued_indices
         return
 
@@ -134,8 +133,6 @@ class EnergyBands(object):
         if 'xticklabels' in h5grp:
             energy_bands.xticklabels = np.char.decode(h5grp['xticklabels'])
         energy_bands._xticks = np.asarray(h5grp['xticks'], dtype=Real)
-        energy_bands.xlim = np.asarray(h5grp['xlim'], dtype=Real)
-        energy_bands.ylim = np.asarray(h5grp['ylim'], dtype=Real)
         energy_bands._discontinued_indices = np.asarray(h5grp['discontinued_indices'], dtype=Int)
         return
 
@@ -167,10 +164,6 @@ class EnergyBands(object):
                                  compression_opts=9)
         h5grp.create_dataset("xticks", shape=np.shape(energy_bands._xticks), dtype=Real,
                              data=energy_bands._xticks, chunks=True, compression='gzip', compression_opts=9)
-        h5grp.create_dataset("xlim", shape=np.shape(energy_bands.xlim), dtype=Real,
-                             data=energy_bands.xlim, chunks=True, compression='gzip', compression_opts=9)
-        h5grp.create_dataset("ylim", shape=np.shape(energy_bands.ylim), dtype=Real,
-                             data=energy_bands.ylim, chunks=True, compression='gzip', compression_opts=9)
         h5grp.create_dataset("discontinued_indices", shape=np.shape(energy_bands._discontinued_indices),
                              dtype=Int, data=energy_bands._discontinued_indices, chunks=True, compression='gzip',
                              compression_opts=9)
@@ -192,17 +185,19 @@ class EnergyBands(object):
         energy_bands._xticks = np.asarray([energy_bands._kpath[0], energy_bands._kpath[-1]], dtype=Real)
         energy_bands._xticks = np.insert(
             energy_bands._xticks, 1, energy_bands._kpath[energy_bands._discontinued_indices])
-        if energy_bands.xlim is None:
-            energy_bands.xlim = (energy_bands._kpath[0], energy_bands._kpath[-1])
         energy_bands._eigenvalues = vasp_data.eigenvalues
         return
 
-    def plotFigure(self, file_name: String) -> None:
-        EnergyBands.plotFigureOfEnergyBands(self, file_name)
+    def plotFigure(self, file_name: String, *,
+                   xlim: List = None, ylim: List = None,
+                   band_indices: List = None) -> None:
+        EnergyBands.plotFigureOfEnergyBands(self, file_name, xlim, ylim, band_indices)
         return
 
     @staticmethod
-    def plotFigureOfEnergyBands(energy_bands: EnergyBands, file_name: String) -> None:
+    def plotFigureOfEnergyBands(energy_bands: EnergyBands, file_name: String, *,
+                                xlim: List = None, ylim: List = None,
+                                band_indices: List = None) -> None:
         plt.rcParams.update({
             "text.usetex": True,
             "font.family": "sans-serif",
@@ -216,7 +211,11 @@ class EnergyBands(object):
         fig: plt.Figure = plt.figure()
         ax: plt.Axes = fig.add_subplot()
         x: Array = np.insert(energy_bands._kpath, energy_bands._discontinued_indices, np.nan)
-        ys: Array = np.insert(energy_bands._eigenvalues - energy_bands.efermi,
+        if band_indices is None:
+            data: Array = energy_bands._eigenvalues
+        else:
+            data: Array = energy_bands._eigenvalues[band_indices]
+        ys: Array = np.insert(data - energy_bands.efermi,
                               energy_bands._discontinued_indices, np.nan, axis=1)
         line_segments: Array = np.insert(np.expand_dims(ys, axis=2), 0, x, axis=2)
         colors: List = [mcolors.to_rgba(c) \
@@ -227,8 +226,12 @@ class EnergyBands(object):
         ax.set_xticks(energy_bands._xticks)
         if energy_bands.xticklabels is not None:
             ax.set_xticklabels(energy_bands.xticklabels)
-        ax.set_xlim(energy_bands.xlim)
-        ax.set_ylim(energy_bands.ylim)
+        if xlim is None:
+            xlim = [energy_bands._kpath[0], energy_bands._kpath[-1]]
+        ax.set_xlim(xlim)
+        if ylim is None:
+            ylim = [-2., 1.]
+        ax.set_ylim(ylim)
         ax.grid()
         plt.show()
         fig.savefig(file_name)
