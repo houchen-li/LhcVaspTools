@@ -12,6 +12,19 @@ from LhcVaspTools.BasicUtils import Int, Real, String, Array, List,\
 
 class EnergyBandsWithWeights(EnergyBands):
 
+    atomic_orbits_indices: dict = {
+        's': 0,
+        'py': 1,
+        'pz': 2,
+        'px': 3,
+        'dxy': 4,
+        'dyz': 5,
+        'dz2': 6,
+        'dxz': 7,
+        'dx2-y2': 8,
+        'all': range(0, 9)
+    }
+
     def __init__(self, kpath: Array = None, eigenvalues: Array = None, weights: Array = None, efermi: Real = 0.,
                  xticklabels: List = None, xticks: Array = None,
                  xlim: Array = None, ylim: Array = None,
@@ -94,13 +107,14 @@ class EnergyBandsWithWeights(EnergyBands):
         })
         fig: plt.Figure = plt.figure()
         ax: plt.Axes = fig.add_subplot()
-        divnorm = mcolors.TwoSlopeNorm(vmin=-0.15, vcenter=0, vmax=0.15)
+        divnorm = mcolors.TwoSlopeNorm(vmin=0.)
         line_segments, weights_segments = EnergyBandsWithWeights.genSegments(energy_bands_with_weights, atomic_orbits)
-        colors: List = [mcolors.to_rgba(c)
-                        for c in plt.rcParams['axes.prop_cycle'].by_key()['color']]
+        colormaps: List = ['Greys', 'Purples', 'Blues', 'Greens', 'Oranges', 'Reds', 'YlOrBr', 'YlOrRd', 'OrRd',
+                           'PuRd', 'RdPu', 'BuPu', 'GnBu', 'PuBu', 'YlGnBu', 'PuBuGn', 'BuGn', 'YlGn']
         for i in np.shape(weights_segments)[1]:
             line_collection: LineCollection = LineCollection(
-                line_segments, array=weights_segments[:, i], cmap='coolwarm', norm=divnorm)
+                line_segments, array=weights_segments[:, i], linewidths=weights_segments[:, i%18], cmap=colormaps[i],
+                norm=divnorm)
             ax.add_collection(line_collection)
         # cbar = fig.colorbar(line_collection, ax=ax)
         # cbar.ax.set_ylabel(r"\(\left<L_" + component[1] + r"\right>\)")
@@ -121,14 +135,10 @@ class EnergyBandsWithWeights(EnergyBands):
         return
 
     @staticmethod
-    def genSegments(energy_bands_with_weights: EnergyBandsWithWeights, component: String,
-                    band_indices: List) -> (Array, Array):
+    def genSegments(energy_bands_with_weights: EnergyBandsWithWeights, atomic_orbits: List) -> (Array, Array):
         x: Array = np.column_stack([energy_bands_with_weights._kpath[:-1], energy_bands_with_weights._kpath[1:]])
         x = np.delete(x, energy_bands_with_weights._discontinued_indices - 1, axis=0)
-        if band_indices is None:
-            data: Array = energy_bands_with_weights._eigenvalues
-        else:
-            data: Array = energy_bands_with_weights._eigenvalues[band_indices]
+        data: Array = energy_bands_with_weights._eigenvalues
         ys = np.stack([np.expand_dims(data[:, :-1] - energy_bands_with_weights.efermi, axis=2),
                        np.expand_dims(data[:, 1:] - energy_bands_with_weights.efermi, axis=2)], axis=2)
         ys = np.delete(ys, energy_bands_with_weights._discontinued_indices - 1, axis=1)
@@ -144,3 +154,11 @@ class EnergyBandsWithWeights(EnergyBands):
         L_segments = np.delete(L_segments, energy_bands_with_weights._discontinued_indices - 1, axis=1)
         L_segments = np.ravel(L_segments)
         return (line_segments, L_segments)
+
+
+    @staticmethod
+    def selectWeightsOfAtomicOrbits(weights: Array, atomic_orbits: List) -> Array:
+        indices: List = []
+        for atom in atomic_orbits:
+            indices.append([EnergyBandsWithWeights.atomic_orbits_indices[orbit_symbol] for orbit_symbol in atom])
+        return
