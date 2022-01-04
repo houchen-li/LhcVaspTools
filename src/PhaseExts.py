@@ -95,19 +95,17 @@ class EnergyBandsWithWeights(EnergyBands):
         fig: plt.Figure = plt.figure()
         ax: plt.Axes = fig.add_subplot()
         divnorm = mcolors.TwoSlopeNorm(vmin=-0.15, vcenter=0, vmax=0.15)
-        line_segments, weight_segments = EnergyBandsWithWeights.genSegments(energy_bands_with_weights, atomic_orbits)
-        colors: List = [mcolors.to_rgba(c) \
+        line_segments, weights_segments = EnergyBandsWithWeights.genSegments(energy_bands_with_weights, atomic_orbits)
+        colors: List = [mcolors.to_rgba(c)
                         for c in plt.rcParams['axes.prop_cycle'].by_key()['color']]
-        for i in np.shape(weights_segments)[0]:
+        for i in np.shape(weights_segments)[1]:
             line_collection: LineCollection = LineCollection(
-                line_segments, array=weight_segments, cmap='coolwarm', norm=divnorm)
+                line_segments, array=weights_segments[:, i], cmap='coolwarm', norm=divnorm)
             ax.add_collection(line_collection)
         # cbar = fig.colorbar(line_collection, ax=ax)
         # cbar.ax.set_ylabel(r"\(\left<L_" + component[1] + r"\right>\)")
         ax.set_ylabel(r"\(E-E_F\) \(\left[\mathrm{eV}\right]\)")
         ax.set_xticks(energy_bands_with_weights._xticks)
-        if energy_bands_with_weights.xticklabels is not None:
-            ax.set_xticklabels(energy_bands_with_weights.xticklabels)
         if energy_bands_with_weights.xticklabels is not None:
             ax.set_xticklabels(energy_bands_with_weights.xticklabels)
         if xlim is None:

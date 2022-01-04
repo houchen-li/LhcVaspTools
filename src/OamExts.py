@@ -161,8 +161,6 @@ class EnergyBandsWithOam(EnergyBands):
         ax.set_xticks(energy_bands_with_oam._xticks)
         if energy_bands_with_oam.xticklabels is not None:
             ax.set_xticklabels(energy_bands_with_oam.xticklabels)
-        if energy_bands_with_oam.xticklabels is not None:
-            ax.set_xticklabels(energy_bands_with_oam.xticklabels)
         if xlim is None:
             xlim = [energy_bands_with_oam._kpath[0], energy_bands_with_oam._kpath[-1]]
         ax.set_xlim(xlim)
