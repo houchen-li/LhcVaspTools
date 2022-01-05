@@ -15,6 +15,7 @@ Complex = np.complex_
 String = str
 Array = np.ndarray
 List = list
+Dict - dict
 
 
 def readDataFromJson(file_name: String) -> object:

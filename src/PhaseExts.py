@@ -6,13 +6,13 @@ import numpy as np
 from matplotlib import colors as mcolors
 from matplotlib.collections import LineCollection
 
-from LhcVaspTools.BasicUtils import Int, Real, String, Array, List,\
+from LhcVaspTools.BasicUtils import Int, Real, String, Array, List, Dict,\
     Vaspdata, EnergyBands, GaussFilter, ElecDnstyCrsSec
 
 
 class EnergyBandsWithWeights(EnergyBands):
 
-    atomic_orbits_indices: dict = {
+    atomic_orbits_indices: Dict = {
         's': 0,
         'py': 1,
         'pz': 2,
@@ -21,19 +21,17 @@ class EnergyBandsWithWeights(EnergyBands):
         'dyz': 5,
         'dz2': 6,
         'dxz': 7,
-        'dx2-y2': 8,
-        'all': range(0, 9)
+        'dx2-y2': 8
     }
 
     def __init__(self, kpath: Array = None, eigenvalues: Array = None, weights: Array = None, efermi: Real = 0.,
-                 xticklabels: List = None, xticks: Array = None,
-                 xlim: Array = None, ylim: Array = None,
-                 discontinued_indices: Array = None) -> None:
+                 xticklabels: List = None, xticks: Array = None, discontinued_indices: Array = None,
+                 types_of_ions: Array = None, nums_of_each_type: Array = None) -> None:
         super(EnergyBandsWithWeights, self).__init__(kpath, eigenvalues, efermi,
-                                                     xticklabels, xticks,
-                                                     xlim, ylim,
-                                                     discontinued_indices,)
+                                                     xticklabels, xticks, discontinued_indices)
         self._weights: Array = weights
+        self._types_of_ions: Array = types_of_ions
+        self._nums_of_each_type: Array = nums_of_each_type
         return
 
     def readFile(self, file_name: String) -> None:
@@ -70,9 +68,14 @@ class EnergyBandsWithWeights(EnergyBands):
     @staticmethod
     def saveData2H5grp(energy_bands_with_weights: EnergyBandsWithWeights, h5grp: h5.Group) -> None:
         super(EnergyBandsWithWeights, EnergyBandsWithWeights).saveData2H5grp()
+        utf8_type = h5.string_dtype('utf-8', 30)
         h5grp.create_dataset('weights', shape=np.shape(energy_bands_with_weights._weights), dtype=Real,
                              data=energy_bands_with_weights._weights, chunks=True, compression='gzip',
                              compression_opts=9)
+        h5grp.create_dataset('types_of_ions', shape=np.shape(energy_bands_with_weights._types_of_ions), dtype=Real,
+                             data=energy_bands_with_weights._types_of_ions)
+        h5grp.create_dataset('nums_of_each_type', shape=np.shape(energy_bands_with_weights._nums_of_each_type),
+                             dtype=Real, data=energy_bands_with_weights._nums_of_each_type)
         return
 
     def loadVaspdata(self, vasp_data: Vaspdata) -> None:
@@ -84,6 +87,8 @@ class EnergyBandsWithWeights(EnergyBands):
         super(EnergyBandsWithWeights, EnergyBandsWithWeights).loadDataFromVaspdata(energy_bands_with_weights,
                                                                                    vasp_data)
         energy_bands_with_weights._weights = np.absolute(vasp_data.phase)
+        energy_bands_with_weights._types_of_ions = vasp_data.types_of_ions
+        energy_bands_with_weights._nums_of_each_type = vasp_data.num_of_each_type
         return
 
     def plotFigure(self, file_name: String, *,
@@ -159,6 +164,14 @@ class EnergyBandsWithWeights(EnergyBands):
     @staticmethod
     def selectWeightsOfAtomicOrbits(weights: Array, atomic_orbits: List) -> Array:
         indices: List = []
+        num_of_orbits: Int = 0
         for atom in atomic_orbits:
+            for orbit_symbol in atom:
+                if orbit_symbol == 'all':
+                    indices.append(range(0, 9))
+                else:
+                    indices.append([])
             indices.append([EnergyBandsWithWeights.atomic_orbits_indices[orbit_symbol] for orbit_symbol in atom])
+            num_of_orbits += len(atom)
+        new_weights: Array = np.empty((num_of_orbits))
         return
