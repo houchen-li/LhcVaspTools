@@ -113,14 +113,18 @@ class EnergyBandsWithWeights(EnergyBands):
         fig: plt.Figure = plt.figure()
         ax: plt.Axes = fig.add_subplot()
         divnorm = mcolors.TwoSlopeNorm(vmin=0.)
-        line_segments, weights_segments = EnergyBandsWithWeights.genSegments(energy_bands_with_weights, atomic_orbits)
+        line_segments, selected_weights_segments = EnergyBandsWithWeights.genSegments(
+            energy_bands_with_weights, atomic_orbits)
         colormaps: List = ['Greys', 'Purples', 'Blues', 'Greens', 'Oranges', 'Reds', 'YlOrBr', 'YlOrRd', 'OrRd',
                            'PuRd', 'RdPu', 'BuPu', 'GnBu', 'PuBu', 'YlGnBu', 'PuBuGn', 'BuGn', 'YlGn']
-        for i in np.shape(weights_segments)[1]:
+        count: Int = 0
+        for label in selected_weights_segments.keys():
             line_collection: LineCollection = LineCollection(
-                line_segments, array=weights_segments[:, i], linewidths=weights_segments[:, i%18], cmap=colormaps[i],
-                norm=divnorm)
+                line_segments, array=selected_weights_segments[label], linewidths=selected_weights_segments[label],
+                cmap=colormaps[count % 18], norm=divnorm)
             ax.add_collection(line_collection)
+            count += 1
+        del count
         # cbar = fig.colorbar(line_collection, ax=ax)
         # cbar.ax.set_ylabel(r"\(\left<L_" + component[1] + r"\right>\)")
         ax.set_ylabel(r"\(E-E_F\) \(\left[\mathrm{eV}\right]\)")
@@ -140,7 +144,7 @@ class EnergyBandsWithWeights(EnergyBands):
         return
 
     @staticmethod
-    def genSegments(energy_bands_with_weights: EnergyBandsWithWeights, atomic_orbits: List) -> (Array, Array):
+    def genSegments(energy_bands_with_weights: EnergyBandsWithWeights, atomic_orbits: Dict) -> (Array, Dict):
         x: Array = np.column_stack([energy_bands_with_weights._kpath[:-1], energy_bands_with_weights._kpath[1:]])
         x = np.delete(x, energy_bands_with_weights._discontinued_indices - 1, axis=0)
         data: Array = energy_bands_with_weights._eigenvalues
@@ -149,29 +153,45 @@ class EnergyBandsWithWeights(EnergyBands):
         ys = np.delete(ys, energy_bands_with_weights._discontinued_indices - 1, axis=1)
         line_segments: Array = np.insert(ys, 0, x, axis=3)
         line_segments = line_segments.reshape(-1, 2, 2)
-        if component == 'Lx':
-            L: Array = np.sum(energy_bands_with_weights._Lx, axis=2)
-        elif component == 'Ly':
-            L: Array = np.sum(energy_bands_with_weights._Ly, axis=2)
-        elif component == 'Lz':
-            L: Array = np.sum(energy_bands_with_weights._Lz, axis=2)
-        L_segments: Array = (L[:, :-1] + L[:, 1:]) / 2.
-        L_segments = np.delete(L_segments, energy_bands_with_weights._discontinued_indices - 1, axis=1)
-        L_segments = np.ravel(L_segments)
-        return (line_segments, L_segments)
-
+        atoms_indices: Dict = EnergyBandsWithWeights.genAtomsIndices(
+            energy_bands_with_weights._types_of_ions, energy_bands_with_weights._nums_of_each_type)
+        selected_weight: Dict = EnergyBandsWithWeights.selectWeightsOfAtomicOrbits(
+            energy_bands_with_weights._weights, atoms_indices, atomic_orbits)
+        selected_weight_segments: Dict = EnergyBandsWithWeights.genSegments4SelectedWeights(
+            selected_weight, energy_bands_with_weights._discontinued_indices)
+        return (line_segments, selected_weight_segments)
 
     @staticmethod
-    def selectWeightsOfAtomicOrbits(weights: Array, atomic_orbits: List) -> Array:
-        indices: List = []
-        num_of_orbits: Int = 0
-        for atom in atomic_orbits:
-            for orbit_symbol in atom:
-                if orbit_symbol == 'all':
-                    indices.append(range(0, 9))
-                else:
-                    indices.append([])
-            indices.append([EnergyBandsWithWeights.atomic_orbits_indices[orbit_symbol] for orbit_symbol in atom])
-            num_of_orbits += len(atom)
-        new_weights: Array = np.empty((num_of_orbits))
-        return
+    def selectWeightsOfAtomicOrbits(weights: Array, atoms_indices: Dict, atomic_orbits: Dict) -> Array:
+        selected_weights: Dict = {}
+        for atomic_symbol in atomic_orbits.keys():
+            if 'all' in atomic_orbits[atomic_symbol]:
+                atomic_orbits[atomic_symbol] = ['s', 'py', 'pz', 'px', 'dxy', 'dyz', 'dz2', 'dxz', 'dx2-y2']
+            for orbital_symbol in atomic_orbits[atomic_symbol]:
+                key: String = '{0:s}: {1:s}'.format((atomic_symbol, orbital_symbol))
+                value: Array = weights[:, :, atoms_indices[atomic_symbol], atomic_orbits[orbital_symbol]]
+                selected_weights[key] = value
+        return selected_weights
+
+    @staticmethod
+    def genAtomsIndices(types_of_ions: Array, nums_of_each_type: Array) -> Dict:
+        atoms_indices: Dict = {}
+        count: Int = 0
+        for ion_type in types_of_ions:
+            for ion_nums in nums_of_each_type:
+                for i in range(1, ion_nums+1):
+                    key: String = '{1:d}{0:s}'.format((ion_type, i))
+                    value: Int = count
+                    atoms_indices[key] = value
+                    count += 1
+        return atoms_indices
+
+    @staticmethod
+    def genSegments4SelectedWeights(selected_weights: Dict, discontinued_indices: Array) -> Dict:
+        selected_weights_segments: Dict = {}
+        for label in selected_weights.keys():
+            value: Array = (selected_weights[label][:, :-1] + selected_weights[label][:, 1:]) / 2.
+            value = np.delete(value, discontinued_indices - 1, axis=1)
+            value = np.ravel(value)
+            selected_weights_segments[label] = value
+        return selected_weights_segments
