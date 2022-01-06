@@ -131,7 +131,8 @@ class EnergyBandsWithOam(EnergyBands):
     def plotFigure(self, file_name: String, component: String, *,
                    xlim: List = None, ylim: List = None,
                    band_indices: List = None) -> None:
-        EnergyBandsWithOam.plotFigureOfEnergyBands(self, file_name, component, xlim, ylim, band_indices)
+        EnergyBandsWithOam.plotFigureOfEnergyBands(
+            self, file_name, component, xlim=xlim, ylim=ylim, band_indices=band_indices)
         return
 
     @staticmethod

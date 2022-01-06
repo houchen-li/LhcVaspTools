@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(name='LhcVaspTools',
       version='1.0',
@@ -11,7 +11,9 @@ setup(name='LhcVaspTools',
       package_dir={
           'LhcVaspTools': 'src',
       },
-      packages=['LhcVaspTools'],
+      packages=[
+          'LhcVaspTools',
+      ],
       scripts=[
           'bin/extractEFermi.py',
           'bin/deterCrossBands.py',
@@ -25,6 +27,8 @@ setup(name='LhcVaspTools',
           'bin/plotBandsWithOam.py',
           'bin/genElecDnstyCrsSecWithOam.py',
           'bin/plotElecDnstyCrsSecWithOam.py',
+          'bin/genBandsWithWeights.py',
+          'bin/plotBandsWithWeights.py',
       ],
       python_requires='>=3.9',
       install_requires=[

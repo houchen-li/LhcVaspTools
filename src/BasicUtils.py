@@ -15,7 +15,7 @@ Complex = np.complex_
 String = str
 Array = np.ndarray
 List = list
-Dict - dict
+Dict = dict
 
 
 def readDataFromJson(file_name: String) -> object:
@@ -45,7 +45,7 @@ class Vaspdata(object):
         self.num_of_orbits: Int = num_of_orbits
         self.scale: Real = scale
         self.lattice_vectors: Array = lattice_vectors
-        self.types_of_ions: Array = types_of_ions
+        self.types_of_ions: List = types_of_ions
         self.nums_of_each_type: Array = nums_of_each_type
         self.positions_of_ions: Array = positions_of_ions
         self.kpoints: Array = kpoints
@@ -76,7 +76,7 @@ class Vaspdata(object):
         vasp_data.num_of_orbits = 9
         vasp_data.scale = Real(h5grp["positions/scale"])
         vasp_data.lattice_vectors = np.asarray(h5grp["positions/lattice_vectors"], dtype=Real)
-        vasp_data.types_of_ions = np.char.decode(h5grp["positions/ion_types"])
+        vasp_data.types_of_ions = np.char.decode(h5grp["positions/ion_types"]).tolist()
         vasp_data.nums_of_each_type = np.asarray(h5grp["positions/number_ion_types"], dtype=Int)
         vasp_data.positions_of_ions = np.asarray(h5grp["positions/position_ions"], dtype=Real)
         vasp_data.kpoints = np.asarray(h5grp["electron_eigenvalues/kpoint_coords"], dtype=Real)
@@ -160,6 +160,7 @@ class EnergyBands(object):
                              data=energy_bands._eigenvalues, chunks=True, compression='gzip', compression_opts=9)
         h5grp.create_dataset("efermi", shape=(1), dtype=Real, data=energy_bands.efermi)
         if energy_bands.xticklabels is not None:
+            print(energy_bands.xticklabels)
             h5grp.create_dataset("xticklabels", shape=np.shape(energy_bands.xticklabels),
                                  dtype=utf8_type, data=energy_bands.xticklabels, chunks=True, compression='gzip',
                                  compression_opts=9)
@@ -192,7 +193,7 @@ class EnergyBands(object):
     def plotFigure(self, file_name: String, *,
                    xlim: List = None, ylim: List = None,
                    band_indices: List = None) -> None:
-        EnergyBands.plotFigureOfEnergyBands(self, file_name, xlim, ylim, band_indices)
+        EnergyBands.plotFigureOfEnergyBands(self, file_name, xlim=xlim, ylim=ylim, band_indices=band_indices)
         return
 
     @staticmethod
@@ -219,7 +220,7 @@ class EnergyBands(object):
         ys: Array = np.insert(data - energy_bands.efermi,
                               energy_bands._discontinued_indices, np.nan, axis=1)
         line_segments: Array = np.insert(np.expand_dims(ys, axis=2), 0, x, axis=2)
-        colors: List = [mcolors.to_rgba(c) \
+        colors: List = [mcolors.to_rgba(c)
                         for c in plt.rcParams['axes.prop_cycle'].by_key()['color']]
         line_collection: LineCollection = LineCollection(line_segments, colors=colors)
         ax.add_collection(line_collection)

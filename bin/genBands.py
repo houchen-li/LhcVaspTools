@@ -33,6 +33,7 @@ def main() -> int:
     energy_bands: EnergyBands = EnergyBands()
     energy_bands.loadVaspdata(vasp_data)
     energy_bands.efermi = efermi
+    energy_bands.xticklabels = xticklabels
     energy_bands.saveFile(output_file_name)
     return 0
 

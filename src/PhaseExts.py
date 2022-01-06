@@ -7,7 +7,7 @@ from matplotlib import colors as mcolors
 from matplotlib.collections import LineCollection
 
 from LhcVaspTools.BasicUtils import Int, Real, String, Array, List, Dict,\
-    Vaspdata, EnergyBands, GaussFilter, ElecDnstyCrsSec
+    Vaspdata, EnergyBands
 
 
 class EnergyBandsWithWeights(EnergyBands):
@@ -26,11 +26,11 @@ class EnergyBandsWithWeights(EnergyBands):
 
     def __init__(self, kpath: Array = None, eigenvalues: Array = None, weights: Array = None, efermi: Real = 0.,
                  xticklabels: List = None, xticks: Array = None, discontinued_indices: Array = None,
-                 types_of_ions: Array = None, nums_of_each_type: Array = None) -> None:
+                 types_of_ions: List = None, nums_of_each_type: Array = None) -> None:
         super(EnergyBandsWithWeights, self).__init__(kpath, eigenvalues, efermi,
                                                      xticklabels, xticks, discontinued_indices)
         self._weights: Array = weights
-        self._types_of_ions: Array = types_of_ions
+        self._types_of_ions: List = types_of_ions
         self._nums_of_each_type: Array = nums_of_each_type
         return
 
@@ -41,7 +41,7 @@ class EnergyBandsWithWeights(EnergyBands):
     @staticmethod
     def readDataFromFile(energy_bands_with_weights: EnergyBandsWithWeights, file_name: String) -> None:
         with h5.File(file_name, 'r') as f:
-            grp: h5.Group = f['results/energy_bands_with_weight']
+            grp: h5.Group = f['results/energy_bands_with_weights']
             EnergyBandsWithWeights.readDataFromH5grp(energy_bands_with_weights, grp)
         return
 
@@ -49,6 +49,8 @@ class EnergyBandsWithWeights(EnergyBands):
     def readDataFromH5grp(energy_bands_with_weights: EnergyBandsWithWeights, h5grp: h5.Group) -> None:
         super(EnergyBandsWithWeights, EnergyBandsWithWeights).readDataFromH5grp(energy_bands_with_weights, h5grp)
         energy_bands_with_weights._weights = np.asarray(h5grp['weights'], dtype=Real)
+        energy_bands_with_weights._types_of_ions = np.char.decode(h5grp["types_of_ions"]).tolist()
+        energy_bands_with_weights._nums_of_each_type = np.asarray(h5grp["nums_of_each_type"], dtype=Int)
         return
 
     def saveFile(self, file_name: String) -> None:
@@ -60,22 +62,23 @@ class EnergyBandsWithWeights(EnergyBands):
         with h5.File(file_name, 'a') as f:
             grp: h5.Group = f.require_group('results')
             if 'energy_bands_with_weights' in grp:
-                del grp['enery_bands_with_weights']
-            subgrp: h5.Group = grp.create_group('energy_bands_with_weight')
+                del grp['energy_bands_with_weights']
+            subgrp: h5.Group = grp.create_group('energy_bands_with_weights')
             EnergyBandsWithWeights.saveData2H5grp(energy_bands_with_weights, subgrp)
         return
 
     @staticmethod
     def saveData2H5grp(energy_bands_with_weights: EnergyBandsWithWeights, h5grp: h5.Group) -> None:
-        super(EnergyBandsWithWeights, EnergyBandsWithWeights).saveData2H5grp()
+        super(EnergyBandsWithWeights, EnergyBandsWithWeights).saveData2H5grp(energy_bands_with_weights, h5grp)
         utf8_type = h5.string_dtype('utf-8', 30)
         h5grp.create_dataset('weights', shape=np.shape(energy_bands_with_weights._weights), dtype=Real,
                              data=energy_bands_with_weights._weights, chunks=True, compression='gzip',
                              compression_opts=9)
-        h5grp.create_dataset('types_of_ions', shape=np.shape(energy_bands_with_weights._types_of_ions), dtype=Real,
-                             data=energy_bands_with_weights._types_of_ions)
+        print(energy_bands_with_weights._types_of_ions)
+        h5grp.create_dataset('types_of_ions', shape=np.shape(energy_bands_with_weights._types_of_ions),
+                             dtype=utf8_type, data=energy_bands_with_weights._types_of_ions)
         h5grp.create_dataset('nums_of_each_type', shape=np.shape(energy_bands_with_weights._nums_of_each_type),
-                             dtype=Real, data=energy_bands_with_weights._nums_of_each_type)
+                             dtype=Int, data=energy_bands_with_weights._nums_of_each_type)
         return
 
     def loadVaspdata(self, vasp_data: Vaspdata) -> None:
@@ -88,16 +91,32 @@ class EnergyBandsWithWeights(EnergyBands):
                                                                                    vasp_data)
         energy_bands_with_weights._weights = np.absolute(vasp_data.phase)
         energy_bands_with_weights._types_of_ions = vasp_data.types_of_ions
-        energy_bands_with_weights._nums_of_each_type = vasp_data.num_of_each_type
+        energy_bands_with_weights._nums_of_each_type = vasp_data.nums_of_each_type
         return
 
-    def plotFigure(self, file_name: String, *,
+    def plotFigureWithAtomsWeights(self, file_name: String, *,
                    xlim: List = None, ylim: List = None,
-                   atomic_orbits: List) -> None:
+                   atoms: List = None) -> None:
+        EnergyBandsWithWeights.plotFigureOfEnergyBandsWithAtomsWeights(
+            self, file_name, xlim=xlim, ylim=ylim, atoms=atoms)
         return
 
     @staticmethod
-    def plotFigureOfEnergyBands(energy_bands_with_weights: EnergyBandsWithWeights, file_name: String, *,
+    def plotFigureOfEnergyBandsWithAtomsWeights(
+            energy_bands: EnergyBands, file_name: String, *,
+            xlim: List = None, ylim: List = None,
+            atoms: List = None) -> None:
+        return
+
+    def plotFigureWithOrbitsWeights(self, file_name: String, *,
+                   xlim: List = None, ylim: List = None,
+                   atomic_orbits: List) -> None:
+        EnergyBandsWithWeights.plotFigureOfEnergyBands(
+            self, file_name, xlim=xlim, ylim=ylim, atomic_orbits=atomic_orbits)
+        return
+
+    @staticmethod
+    def plotFigureOfEnergyBandsWithOrbitsWeights(energy_bands_with_weights: EnergyBandsWithWeights, file_name: String, *,
                                 xlim: List = None, ylim: List = None,
                                 atomic_orbits: List) -> None:
         plt.rcParams.update({
@@ -112,16 +131,16 @@ class EnergyBandsWithWeights(EnergyBands):
         })
         fig: plt.Figure = plt.figure()
         ax: plt.Axes = fig.add_subplot()
-        divnorm = mcolors.TwoSlopeNorm(vmin=0.)
+        #divnorm = mcolors.TwoSlopeNorm(vmin=0.)
         line_segments, selected_weights_segments = EnergyBandsWithWeights.genSegments(
             energy_bands_with_weights, atomic_orbits)
-        colormaps: List = ['Greys', 'Purples', 'Blues', 'Greens', 'Oranges', 'Reds', 'YlOrBr', 'YlOrRd', 'OrRd',
-                           'PuRd', 'RdPu', 'BuPu', 'GnBu', 'PuBu', 'YlGnBu', 'PuBuGn', 'BuGn', 'YlGn']
+        colors: List = [mcolors.to_rgba(c)
+                        for c in plt.rcParams['axes.prop_cycle'].by_key()['color']]
         count: Int = 0
         for label in selected_weights_segments.keys():
             line_collection: LineCollection = LineCollection(
-                line_segments, array=selected_weights_segments[label], linewidths=selected_weights_segments[label],
-                cmap=colormaps[count % 18], norm=divnorm)
+                line_segments, array=selected_weights_segments[label], linewidths=selected_weights_segments[label]*5.,
+                color=colors[count % 10], label=label)
             ax.add_collection(line_collection)
             count += 1
         del count
@@ -137,6 +156,7 @@ class EnergyBandsWithWeights(EnergyBands):
         if ylim is None:
             ylim = [-2., 1.]
         ax.set_ylim(ylim)
+        ax.legend()
         ax.grid()
         plt.show()
         fig.savefig(file_name)
@@ -144,7 +164,13 @@ class EnergyBandsWithWeights(EnergyBands):
         return
 
     @staticmethod
-    def genSegments(energy_bands_with_weights: EnergyBandsWithWeights, atomic_orbits: Dict) -> (Array, Dict):
+    def genSegments4Atoms(
+            energy_bands_with_weights: EnergyBandsWithWeights, atoms: Dict) -> (Array, Dict):
+        return
+
+    @staticmethod
+    def genSegments4AtomicOrbits(
+            energy_bands_with_weights: EnergyBandsWithWeights, atomic_orbits: Dict) -> (Array, Dict):
         x: Array = np.column_stack([energy_bands_with_weights._kpath[:-1], energy_bands_with_weights._kpath[1:]])
         x = np.delete(x, energy_bands_with_weights._discontinued_indices - 1, axis=0)
         data: Array = energy_bands_with_weights._eigenvalues
@@ -162,14 +188,15 @@ class EnergyBandsWithWeights(EnergyBands):
         return (line_segments, selected_weight_segments)
 
     @staticmethod
-    def selectWeightsOfAtomicOrbits(weights: Array, atoms_indices: Dict, atomic_orbits: Dict) -> Array:
+    def selectWeightsOfAtomicOrbits(weights: Array, atoms_indices: Dict, atomic_orbits: Dict) -> Dict:
         selected_weights: Dict = {}
         for atomic_symbol in atomic_orbits.keys():
             if 'all' in atomic_orbits[atomic_symbol]:
                 atomic_orbits[atomic_symbol] = ['s', 'py', 'pz', 'px', 'dxy', 'dyz', 'dz2', 'dxz', 'dx2-y2']
             for orbital_symbol in atomic_orbits[atomic_symbol]:
-                key: String = '{0:s}: {1:s}'.format((atomic_symbol, orbital_symbol))
-                value: Array = weights[:, :, atoms_indices[atomic_symbol], atomic_orbits[orbital_symbol]]
+                key: String = '{0:s}: {1:s}'.format(atomic_symbol, orbital_symbol)
+                value: Array = weights[:, :, atoms_indices[atomic_symbol],
+                               EnergyBandsWithWeights.atomic_orbits_indices[orbital_symbol]]
                 selected_weights[key] = value
         return selected_weights
 
@@ -177,13 +204,12 @@ class EnergyBandsWithWeights(EnergyBands):
     def genAtomsIndices(types_of_ions: Array, nums_of_each_type: Array) -> Dict:
         atoms_indices: Dict = {}
         count: Int = 0
-        for ion_type in types_of_ions:
-            for ion_nums in nums_of_each_type:
-                for i in range(1, ion_nums+1):
-                    key: String = '{1:d}{0:s}'.format((ion_type, i))
-                    value: Int = count
-                    atoms_indices[key] = value
-                    count += 1
+        for ion_type, ion_nums in zip(types_of_ions, nums_of_each_type):
+            for i in range(1, ion_nums+1):
+                key: String = '{1:d}{0:s}'.format(ion_type, i)
+                value: Int = count
+                atoms_indices[key] = value
+                count += 1
         return atoms_indices
 
     @staticmethod
