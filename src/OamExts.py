@@ -7,7 +7,7 @@ from matplotlib import colors as mcolors
 from matplotlib.collections import LineCollection
 
 from LhcVaspTools.BasicUtils import Int, Real, String, Array, List,\
-    Vaspdata, EnergyBands, GaussFilter, ElecDnstyCrsSec
+    initFigure, Vaspdata, EnergyBands, GaussFilter, ElecDnstyCrsSec
 
 
 class OamCalc(object):
@@ -139,18 +139,7 @@ class EnergyBandsWithOam(EnergyBands):
     def plotFigureOfEnergyBands(energy_bands_with_oam: EnergyBandsWithOam, file_name: String, component: String, *,
                                 xlim: List = None, ylim: List = None,
                                 band_indices: List = None) -> None:
-        plt.rcParams.update({
-            "text.usetex": True,
-            "font.family": "sans-serif",
-            "font.sans-serif": ["Helvetica"]
-        })
-        plt.rcParams.update({
-            "text.usetex": True,
-            "font.family": "serif",
-            "font.serif": ["Palatino"],
-        })
-        fig: plt.Figure = plt.figure()
-        ax: plt.Axes = fig.add_subplot()
+        fig, ax = initFigure()
         divnorm = mcolors.TwoSlopeNorm(vmin=-0.15, vcenter=0, vmax=0.15)
         line_segments, L_segments = EnergyBandsWithOam.genSegments(energy_bands_with_oam, component, band_indices)
         line_collection: LineCollection = LineCollection(
@@ -285,18 +274,7 @@ class ElecDnstyCrsSecWithOam(ElecDnstyCrsSec):
     @staticmethod
     def plotFigureOfElecDnsty(elec_dnsty_crs_sec_with_oam: ElecDnstyCrsSecWithOam, file_name: String,
                               component: String) -> None:
-        plt.rcParams.update({
-            "text.usetex": True,
-            "font.family": "sans-serif",
-            "font.sans-serif": ["Helvetica"]
-        })
-        plt.rcParams.update({
-            "text.usetex": True,
-            "font.family": "serif",
-            "font.serif": ["Palatino"],
-        })
-        fig: plt.Figure = plt.Figure()
-        ax: plt.Axes = fig.add_subplot()
+        fig, ax = initFigure()
         divnorm = mcolors.TwoSlopeNorm(vmin=-0.5, vcenter=0, vmax=0.5)
         L_density: Array = ElecDnstyCrsSecWithOam.genOamDensityForCrsSec(elec_dnsty_crs_sec_with_oam,
                                                                          component)

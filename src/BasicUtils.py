@@ -30,6 +30,22 @@ def saveData2Json(data: object, file_name: String) -> None:
     return
 
 
+def initFigure() -> (plt.Figure, plt.Axes):
+    plt.rcParams.update({
+        "text.usetex": True,
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Helvetica"]
+    })
+    plt.rcParams.update({
+        "text.usetex": True,
+        "font.family": "serif",
+        "font.serif": ["Palatino"],
+    })
+    fig: plt.Figure = plt.figure()
+    ax: plt.Axes = fig.add_subplot()
+    return (fig, ax)
+
+
 class Vaspdata(object):
 
     def __init__(self, num_of_bands: Int = None, num_of_kpoints: Int = None,
@@ -160,7 +176,6 @@ class EnergyBands(object):
                              data=energy_bands._eigenvalues, chunks=True, compression='gzip', compression_opts=9)
         h5grp.create_dataset("efermi", shape=(1), dtype=Real, data=energy_bands.efermi)
         if energy_bands.xticklabels is not None:
-            print(energy_bands.xticklabels)
             h5grp.create_dataset("xticklabels", shape=np.shape(energy_bands.xticklabels),
                                  dtype=utf8_type, data=energy_bands.xticklabels, chunks=True, compression='gzip',
                                  compression_opts=9)
@@ -200,18 +215,7 @@ class EnergyBands(object):
     def plotFigureOfEnergyBands(energy_bands: EnergyBands, file_name: String, *,
                                 xlim: List = None, ylim: List = None,
                                 band_indices: List = None) -> None:
-        plt.rcParams.update({
-            "text.usetex": True,
-            "font.family": "sans-serif",
-            "font.sans-serif": ["Helvetica"]
-        })
-        plt.rcParams.update({
-            "text.usetex": True,
-            "font.family": "serif",
-            "font.serif": ["Palatino"],
-        })
-        fig: plt.Figure = plt.figure()
-        ax: plt.Axes = fig.add_subplot()
+        fig, ax = initFigure()
         x: Array = np.insert(energy_bands._kpath, energy_bands._discontinued_indices, np.nan)
         if band_indices is None:
             data: Array = energy_bands._eigenvalues
@@ -442,18 +446,7 @@ class EnergyCutCrsSec(CrsSec):
 
     @staticmethod
     def plotFigureForCrsSec(energy_cut_crs_sec: EnergyCutCrsSec, file_name: String) -> None:
-        plt.rcParams.update({
-            "text.usetex": True,
-            "font.family": "sans-serif",
-            "font.sans-serif": ["Helvetica"]
-        })
-        plt.rcParams.update({
-            "text.usetex": True,
-            "font.family": "serif",
-            "font.serif": ["Palatino"],
-        })
-        fig: plt.Figure = plt.figure()
-        ax: plt.Axes = fig.add_subplot()
+        fig, ax = initFigure()
         for i in energy_cut_crs_sec.cross_bands:
             ax.contour(energy_cut_crs_sec._KX, energy_cut_crs_sec._KY, energy_cut_crs_sec._eigenvalues[i, :, :],
                        levels=[energy_cut_crs_sec.energy_level])
@@ -537,18 +530,7 @@ class ElecDnstyCrsSec(CrsSec):
 
     @staticmethod
     def plotFigureForCrsSec(elec_dnsty_crs_sec: ElecDnstyCrsSec, file_name: String) -> None:
-        plt.rcParams.update({
-            "text.usetex": True,
-            "font.family": "sans-serif",
-            "font.sans-serif": ["Helvetica"]
-        })
-        plt.rcParams.update({
-            "text.usetex": True,
-            "font.family": "serif",
-            "font.serif": ["Palatino"],
-        })
-        fig: plt.Figure = plt.figure()
-        ax: plt.Axes = fig.add_subplot()
+        fig, ax = initFigure()
         divnorm = mcolors.TwoSlopeNorm(vmin=0., vcenter=7.5, vmax=15.)
         elec_dnsty: Array = ElecDnstyCrsSec.genElecDnstyForCrsSec(elec_dnsty_crs_sec)
         cont = ax.contourf(elec_dnsty_crs_sec._KX, elec_dnsty_crs_sec._KY, elec_dnsty,

@@ -12,8 +12,8 @@ def parseArgv() -> argparse.Namespace:
                         help="input hdf5 file.")
     parser.add_argument("-o", "--output-file", nargs="?", type=str,
                         dest="output_file_name", required=True, help="output file.")
-    parser.add_argument('-af', '--atomic-orbits-file', nargs='?', type=str,
-                        dest='atomic_orbits_file_name', help='atomic orbits file.')
+    parser.add_argument('-cf', '--config-file', nargs='?', type=str,
+                        dest='config_file_name', help='config file.')
     options: argparse.Namespace = parser.parse_args()
     return options
 
@@ -22,14 +22,14 @@ def main() -> int:
     options: argparse.Namespace = parseArgv()
     input_file_name: str = options.input_file_name
     output_file_name: str = options.output_file_name
-    atomic_orbits_file_name: str = options.atomic_orbits_file_name
-    if atomic_orbits_file_name is None:
-        atomic_orbits: dict = None
+    config_file_name: str = options.config_file_name
+    if config_file_name is None:
+        config: object = None
     else:
-        atomic_orbits: dict = readDataFromJson(atomic_orbits_file_name)
+        config: object = readDataFromJson(config_file_name)
     energy_bands_with_weights: EnergyBandsWithWeights = EnergyBandsWithWeights()
     energy_bands_with_weights.readFile(input_file_name)
-    energy_bands_with_weights.plotFigure(output_file_name, ylim=[-15., 15.], atomic_orbits=atomic_orbits)
+    energy_bands_with_weights.plotFigure(output_file_name, ylim=[-15., 15.], config=config)
     return 0
 
 
