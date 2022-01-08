@@ -29,7 +29,7 @@ def main() -> int:
         config: object = readDataFromJson(config_file_name)
     energy_bands_with_weights: EnergyBandsWithWeights = EnergyBandsWithWeights()
     energy_bands_with_weights.readFile(input_file_name)
-    energy_bands_with_weights.plotFigure(output_file_name, ylim=[-15., 15.], config=config)
+    energy_bands_with_weights.plotFigure(output_file_name, config=config)
     return 0
 
 

@@ -6,7 +6,8 @@ from LhcVaspTools.BasicUtils import saveData2Json, Vaspdata
 
 def parseArgv() -> argparse.Namespace:
     parser: argparse.ArgumentParser = argparse.ArgumentParser(description=
-                                                              'This script is used to extract Fermi energy out of \"vaspout.h5\"')
+                                                              'This script is used to extract Fermi\
+                                                              energy out of \"vaspout.h5\"')
     parser.add_argument('input_file_name', nargs='?', type=str, help='input \"vaspout.h5\" file.')
     parser.add_argument('-o', '--output-file', nargs='?', type=str, dest='output_file_name',
                         help="output file.")

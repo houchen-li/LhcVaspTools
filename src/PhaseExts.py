@@ -108,6 +108,7 @@ class EnergyBandsWithWeights(EnergyBands):
         divnorm = mcolors.TwoSlopeNorm(vmin=0., vcenter=0.5, vmax=1.)
         line_segments, selected_weights_segments = EnergyBandsWithWeights.genSegments(
             energy_bands_with_weights, config)
+        colors: List = ['Purple', 'Blue', 'Green', 'Orange', 'Red', 'Grey']
         colormaps: List = ['Purples', 'Blues', 'Greens', 'Oranges', 'Reds', 'Greys']
         count: Int = 0
         for label in selected_weights_segments.keys():
@@ -118,6 +119,13 @@ class EnergyBandsWithWeights(EnergyBands):
             count += 1
         del count
         ax.set_ylabel(r"\(E-E_F\) \(\left[\mathrm{eV}\right]\)")
+        count: Int = 0
+        leg = ax.legend()
+        for line in leg.get_lines():
+            line.set_linewidth(2.)
+            line.set_color(colors[count % 6])
+            count += 1
+        del count
         ax.set_xticks(energy_bands_with_weights._xticks)
         if energy_bands_with_weights.xticklabels is not None:
             ax.set_xticklabels(energy_bands_with_weights.xticklabels)
@@ -127,7 +135,6 @@ class EnergyBandsWithWeights(EnergyBands):
         if ylim is None:
             ylim = [-2., 1.]
         ax.set_ylim(ylim)
-        ax.legend()
         ax.grid()
         plt.show()
         fig.savefig(file_name)

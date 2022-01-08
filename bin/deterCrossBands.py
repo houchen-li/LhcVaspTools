@@ -14,8 +14,7 @@ def parseArgv() -> argparse.Namespace:
     parser.add_argument('-o', '--output-file', nargs='?', type=str,
                         dest='output_file_name', help="output file.")
     parser.add_argument('-e', '--energy-level', nargs='?', type=float,
-                        dest='energy_level', required=True, help='the energy level \
-            where bands cross')
+                        dest='energy_level', required=True, help='the energy level where bands cross.')
     options: argparse.Namespace = parser.parse_args()
     return options
 

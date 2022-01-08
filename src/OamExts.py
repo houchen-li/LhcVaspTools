@@ -267,17 +267,17 @@ class ElecDnstyCrsSecWithOam(ElecDnstyCrsSec):
             vasp_data.num_of_bands, num_of_grids[1], num_of_grids[0], vasp_data.num_of_ions))
         return
 
-    def plotFigure(self, file_name: String, component: String) -> None:
-        ElecDnstyCrsSecWithOam.plotFigureOfElecDnsty(self, file_name, component)
+    def plotFigure(self, file_name: String, component: String, band_indices: List = None) -> None:
+        ElecDnstyCrsSecWithOam.plotFigureOfElecDnsty(self, file_name, component, band_indices)
         return
 
     @staticmethod
     def plotFigureOfElecDnsty(elec_dnsty_crs_sec_with_oam: ElecDnstyCrsSecWithOam, file_name: String,
-                              component: String) -> None:
+                              component: String, band_indices: List = None) -> None:
         fig, ax = initFigure()
         divnorm = mcolors.TwoSlopeNorm(vmin=-0.5, vcenter=0, vmax=0.5)
         L_density: Array = ElecDnstyCrsSecWithOam.genOamDensityForCrsSec(elec_dnsty_crs_sec_with_oam,
-                                                                         component)
+                                                                         component, band_indices)
         cont = ax.contourf(elec_dnsty_crs_sec_with_oam._KX, elec_dnsty_crs_sec_with_oam._KY, L_density,
                            cmap='coolwarm', norm=divnorm, levels=50)
         cbar = fig.colorbar(cont, ax=ax)
@@ -291,18 +291,28 @@ class ElecDnstyCrsSecWithOam(ElecDnstyCrsSec):
         return
 
     @staticmethod
-    def genOamDensityForCrsSec(elec_dnsty_crs_sec_with_oam: ElecDnstyCrsSecWithOam, component: String) \
-            -> Array:
+    def genOamDensityForCrsSec(elec_dnsty_crs_sec_with_oam: ElecDnstyCrsSecWithOam, component: String,
+                               band_indices: List = None) -> Array:
         gauss_filter: GaussFilter = GaussFilter()
-        gauss_filter.eigenvalues = elec_dnsty_crs_sec_with_oam._eigenvalues
+        if band_indices is None:
+            data: Array = elec_dnsty_crs_sec_with_oam._eigenvalues
+            if component == 'Lx':
+                L: Array = np.sum(elec_dnsty_crs_sec_with_oam._LX, axis=3)
+            elif component == 'Ly':
+                L: Array = np.sum(elec_dnsty_crs_sec_with_oam._LY, axis=3)
+            elif component == 'Lz':
+                L: Array = np.sum(elec_dnsty_crs_sec_with_oam._LZ, axis=3)
+        else:
+            data: Array = elec_dnsty_crs_sec_with_oam._eigenvalues[band_indices]
+            if component == 'Lx':
+                L: Array = np.sum(elec_dnsty_crs_sec_with_oam._LX[band_indices], axis=3)
+            elif component == 'Ly':
+                L: Array = np.sum(elec_dnsty_crs_sec_with_oam._LY[band_indices], axis=3)
+            elif component == 'Lz':
+                L: Array = np.sum(elec_dnsty_crs_sec_with_oam._LZ[band_indices], axis=3)
+        gauss_filter.eigenvalues = data
         gauss_filter.energy_level = elec_dnsty_crs_sec_with_oam.energy_level
         gauss_filter.sigma = elec_dnsty_crs_sec_with_oam.sigma
         gauss_filter.do_calculation()
-        if component == 'Lx':
-            L: Array = np.sum(elec_dnsty_crs_sec_with_oam._LX, axis=3)
-        elif component == 'Ly':
-            L: Array = np.sum(elec_dnsty_crs_sec_with_oam._LY, axis=3)
-        elif component == 'Lz':
-            L: Array = np.sum(elec_dnsty_crs_sec_with_oam._LZ, axis=3)
         L_density: Array = np.sum(L * gauss_filter.f, axis=0)
         return L_density

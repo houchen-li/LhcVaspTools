@@ -5,8 +5,8 @@ from LhcVaspTools.BasicUtils import readDataFromJson, Vaspdata, EnergyBands
 
 
 def parseArgv() -> argparse.Namespace:
-    parser: argparse.ArgumentParser = argparse.ArgumentParser(description=
-                                                              "This script is used to extract bands from \"vaspout.h5\".")
+    parser: argparse.ArgumentParser = argparse.ArgumentParser(
+        description="This script is used to extract bands from \"vaspout.h5\".")
     parser.add_argument("input_file_name", nargs="?", type=str, help="input \"vaspout.h5\" file.")
     parser.add_argument("-o", "--output-file", nargs="?", type=str, dest="output_file_name",
                         help="output file.")

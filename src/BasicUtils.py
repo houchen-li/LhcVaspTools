@@ -524,15 +524,15 @@ class ElecDnstyCrsSec(CrsSec):
                                                                         num_of_grids[1], num_of_grids[0])
         return
 
-    def plotFigure(self, file_name: String) -> None:
-        ElecDnstyCrsSec.plotFigureForCrsSec(self, file_name)
+    def plotFigure(self, file_name: String, band_indices: List = None) -> None:
+        ElecDnstyCrsSec.plotFigureForCrsSec(self, file_name, band_indices)
         return
 
     @staticmethod
-    def plotFigureForCrsSec(elec_dnsty_crs_sec: ElecDnstyCrsSec, file_name: String) -> None:
+    def plotFigureForCrsSec(elec_dnsty_crs_sec: ElecDnstyCrsSec, file_name: String, band_indices: List = None) -> None:
         fig, ax = initFigure()
         divnorm = mcolors.TwoSlopeNorm(vmin=0., vcenter=7.5, vmax=15.)
-        elec_dnsty: Array = ElecDnstyCrsSec.genElecDnstyForCrsSec(elec_dnsty_crs_sec)
+        elec_dnsty: Array = ElecDnstyCrsSec.genElecDnstyForCrsSec(elec_dnsty_crs_sec, band_indices)
         cont = ax.contourf(elec_dnsty_crs_sec._KX, elec_dnsty_crs_sec._KY, elec_dnsty,
                            cmap='viridis', norm=divnorm, levels=50)
         cbar = fig.colorbar(cont, ax=ax)
@@ -546,9 +546,13 @@ class ElecDnstyCrsSec(CrsSec):
         return
 
     @staticmethod
-    def genElecDnstyForCrsSec(elec_dnsty_crs_sec: ElecDnstyCrsSec) -> Array:
+    def genElecDnstyForCrsSec(elec_dnsty_crs_sec: ElecDnstyCrsSec, band_indices: List = None) -> Array:
+        if band_indices is None:
+            data: Array = elec_dnsty_crs_sec._eigenvalues
+        else:
+            data: Array = elec_dnsty_crs_sec._eigenvalues[band_indices]
         gauss_filter: GaussFilter = GaussFilter()
-        gauss_filter.eigenvalues = elec_dnsty_crs_sec._eigenvalues
+        gauss_filter.eigenvalues = data
         gauss_filter.energy_level = elec_dnsty_crs_sec.energy_level
         gauss_filter.sigma = elec_dnsty_crs_sec.sigma
         gauss_filter.do_calculation()

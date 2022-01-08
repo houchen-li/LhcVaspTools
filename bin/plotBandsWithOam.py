@@ -16,7 +16,7 @@ def parseArgv() -> argparse.Namespace:
                         choices=['Lx', 'Ly', 'Lz'], dest='component', required=True,
                         help='the OAM component to plot.')
     parser.add_argument('-bf', '--band-indices-file', nargs='?', type=str,
-                        dest='band_indices_file', help='band_indices_file_name')
+                        dest='band_indices_file_name', help='band indices file name.')
     options: argparse.Namespace = parser.parse_args()
     return options
 

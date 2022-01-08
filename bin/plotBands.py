@@ -28,7 +28,7 @@ def main() -> int:
         band_indices: list = readDataFromJson(band_indices_file_name)
     energy_bands: EnergyBands = EnergyBands()
     energy_bands.readFile(input_file_name)
-    energy_bands.plotFigure(output_file_name, ylim=[-15., 15.], band_indices=band_indices)
+    energy_bands.plotFigure(output_file_name, band_indices=band_indices)
     return 0
 
 
