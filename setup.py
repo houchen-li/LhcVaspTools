@@ -17,7 +17,7 @@ setup(name='LhcVaspTools',
       scripts=[
           'bin/extractEFermi.py',
           'bin/deterCrossBands.py',
-          'bin/extractWeightsOnEachBand.py',
+          'bin/genWeightsOnEachBand.py',
           'bin/genKpointsPlane.py',
           'bin/genBands.py',
           'bin/plotBands.py',

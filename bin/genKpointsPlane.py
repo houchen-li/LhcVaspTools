@@ -26,10 +26,10 @@ def sliceDistance(coord:np.ndarray, num_of_grids):
     return np.linspace(coord[0], coord[1], num_of_grids)
 
 
-def genKpointsPlane(A: np.ndarray, B: np.ndarray, C: np.ndarray, D: np.ndarray, num_of_grids_AB: int=101,
-                    num_of_grids_AC: int=101) -> np.ndarray:
+def genKpointsPlane(A: np.ndarray, B: np.ndarray, C: np.ndarray, D: np.ndarray,
+                    num_of_grids_AB: int=101, num_of_grids_AD: int=101) -> np.ndarray:
     lines_segment: np.ndarray = np.stack(
-        [np.linspace(A, C, num_of_grids_AC), np.linspace(B, D, num_of_grids_AC)], axis=1)
+        [np.linspace(A, D, num_of_grids_AD), np.linspace(B, C, num_of_grids_AD)], axis=1)
     kpoints_plane: np.ndarray = np.apply_along_axis(sliceDistance, 1, lines_segment, num_of_grids_AB)
     kpoints_plane = kpoints_plane.reshape((-1, 3))
     return kpoints_plane

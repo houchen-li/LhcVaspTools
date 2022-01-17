@@ -110,22 +110,16 @@ class EnergyBandsWithWeights(EnergyBands):
             energy_bands_with_weights, config)
         colors: List = ['Purple', 'Blue', 'Green', 'Orange', 'Red', 'Grey']
         colormaps: List = ['Purples', 'Blues', 'Greens', 'Oranges', 'Reds', 'Greys']
-        count: Int = 0
-        for label in selected_weights_segments.keys():
+        for i, label in enumerate(selected_weights_segments.keys()):
             line_collection: LineCollection = LineCollection(
                 line_segments, array=selected_weights_segments[label], linewidths=selected_weights_segments[label],
-                cmap=colormaps[count % 6], label=label, norm=divnorm)
+                cmap=colormaps[i % 6], label=label, norm=divnorm)
             ax.add_collection(line_collection)
-            count += 1
-        del count
         ax.set_ylabel(r"\(E-E_F\) \(\left[\mathrm{eV}\right]\)")
-        count: Int = 0
         leg = ax.legend()
-        for line in leg.get_lines():
+        for i, line in enumerate(leg.get_lines()):
             line.set_linewidth(2.)
-            line.set_color(colors[count % 6])
-            count += 1
-        del count
+            line.set_color(colors[i % 6])
         ax.set_xticks(energy_bands_with_weights._xticks)
         if energy_bands_with_weights.xticklabels is not None:
             ax.set_xticklabels(energy_bands_with_weights.xticklabels)
@@ -190,14 +184,11 @@ class EnergyBandsWithWeights(EnergyBands):
     @staticmethod
     def genAtomsIndices(types_of_ions: List, nums_of_each_type: Array) -> Dict:
         atoms_indices: Dict = {}
-        count: Int = 0
-        for ion_type, ion_nums in zip(types_of_ions, nums_of_each_type):
-            for i in range(1, ion_nums+1):
-                key: String = '{1:d}{0:s}'.format(ion_type, i)
-                value: Int = count
+        for i, (ion_type, ion_nums) in enumerate(zip(types_of_ions, nums_of_each_type)):
+            for k in range(1, ion_nums+1):
+                key: String = '{1:d}{0:s}'.format(ion_type, k)
+                value: Int = i
                 atoms_indices[key] = value
-                count += 1
-        del count
         return atoms_indices
 
     @staticmethod
